@@ -22,7 +22,6 @@ import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import edp.core.common.job.ScheduleService;
 import edp.core.exception.ServerException;
-import edp.core.model.QueryColumn;
 import edp.core.utils.DateUtils;
 import edp.core.utils.FileUtils;
 import edp.core.utils.MailUtils;
@@ -30,28 +29,27 @@ import edp.davinci.common.service.CommonService;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.enums.CheckEntityEnum;
 import edp.davinci.core.enums.CronJobMediaType;
+import edp.davinci.core.enums.FileTypeEnum;
 import edp.davinci.dao.*;
 import edp.davinci.dto.cronJobDto.CronJobConfig;
 import edp.davinci.dto.cronJobDto.CronJobContent;
-import edp.davinci.dto.viewDto.ViewExecuteParam;
-import edp.davinci.dto.viewDto.ViewWithProjectAndSource;
 import edp.davinci.model.*;
 import edp.davinci.service.ViewService;
 import edp.davinci.service.WidgetService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.URLDecoder;
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("AlibabaThreadPoolCreation")
 @Slf4j
@@ -171,6 +169,9 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
             if (!file.exists()) {
                 file.mkdirs();
             }
+
+            imagePath = imagePath.replaceAll(File.separator + "{2,}", File.separator);
+
             String url = getContentUrl(userId, cronJobContent.getContentType(), cronJobContent.getId());
             boolean bol = phantomRender(url, imagePath);
             if (bol) {
@@ -268,9 +269,11 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
                 if (dashboard != null) {
                     Set<Widget> widgets = widgetMapper.getByDashboard(dashboard.getId());
                     if (widgets != null && widgets.size() > 0) {
-                        String filePath = fileBasePath + baseUrl + File.separator + dashboard.getName() + "-" + UUID.randomUUID() + ".xlsx";
+                        String filePath = fileBasePath + baseUrl + File.separator + dashboard.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
 
-                        File file = writeExcel(widgets, filePath, user);
+                        filePath = filePath.replaceAll(File.separator + "{2,}", File.separator);
+
+                        File file = widgetService.writeExcel(widgets, null, filePath, user, false);
                         files.add(file);
                     }
                 }
@@ -279,10 +282,9 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
                 if (display != null) {
                     Set<Widget> widgets = widgetMapper.getByDisplayId(display.getId());
                     if (widgets != null && widgets.size() > 0) {
-
-                        String filePath = fileBasePath + baseUrl + File.separator + display.getName() + "-" + UUID.randomUUID() + ".xlsx";
-
-                        File file = writeExcel(widgets, filePath, user);
+                        String filePath = fileBasePath + baseUrl + File.separator + display.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
+                        filePath = filePath.replaceAll(File.separator + "{2,}", File.separator);
+                        File file = widgetService.writeExcel(widgets, null, filePath, user, false);
                         files.add(file);
                     }
                 }
@@ -299,114 +301,4 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
         return files;
     }
 
-
-    /**
-     * widget列表数据渲染到excel
-     *
-     * @param widgets
-     * @param excelFilePath
-     * @return
-     * @throws Exception
-     */
-    private File writeExcel(Set<Widget> widgets, String excelFilePath, User user) throws Exception {
-        if (StringUtils.isEmpty(excelFilePath)) {
-            throw new ServerException("excel file path is empty");
-        }
-        if (!excelFilePath.trim().toLowerCase().endsWith(".xlsx")) {
-            throw new ServerException("unknow file format");
-        }
-
-        XSSFWorkbook wb = new XSSFWorkbook();
-        XSSFCellStyle cellStyle = wb.createCellStyle();
-        XSSFDataFormat format = wb.createDataFormat();
-        cellStyle.setDataFormat(format.getFormat("@"));
-
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        CountDownLatch countDownLatch = new CountDownLatch(widgets.size());
-
-        Iterator<Widget> iterator = widgets.iterator();
-        int i = 1;
-        while (iterator.hasNext()) {
-            Widget widget = iterator.next();
-            final String sheetName = widgets.size() == 1 ? "Sheet" : "Sheet" + (widgets.size() - (i - 1));
-            executorService.execute(() -> {
-                XSSFSheet sheet = null;
-                try {
-                    ViewWithProjectAndSource viewWithProjectAndSource = viewMapper.getViewWithProjectAndSourceById(widget.getViewId());
-
-                    ViewExecuteParam executeParam = widgetService.buildViewExecuteParam(widget);
-
-                    List<QueryColumn> columns = viewService.getResultMeta(viewWithProjectAndSource, executeParam, user);
-                    List<Map<String, Object>> dataList = viewService.getResultDataList(viewWithProjectAndSource, executeParam, user);
-
-                    sheet = wb.createSheet(sheetName + "_" + widget.getName());
-                    writeSheet(sheet, columns, dataList, cellStyle);
-                } catch (ServerException e) {
-                    e.printStackTrace();
-                } finally {
-                    sheet = null;
-                    countDownLatch.countDown();
-                }
-            });
-
-            i++;
-        }
-
-        countDownLatch.await();
-        executorService.shutdown();
-
-        File file = new File(excelFilePath);
-        File dir = new File(file.getParent());
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        FileOutputStream out = new FileOutputStream(excelFilePath);
-        wb.write(out);
-        out.flush();
-        out.close();
-        return file;
-    }
-
-    /**
-     * 写入数据到excel sheet页
-     *
-     * @param sheet
-     * @param columns
-     * @param dataList
-     * @param cellStyle
-     */
-    private void writeSheet(XSSFSheet sheet, List<QueryColumn> columns, List<Map<String, Object>> dataList, XSSFCellStyle cellStyle) {
-        XSSFRow row = null;
-        row = sheet.createRow(0);
-        //header
-        for (int i = 0; i < columns.size(); i++) {
-            row.createCell(i).setCellValue(columns.get(i).getName());
-        }
-        //data
-        for (int i = 0; i < dataList.size(); i++) {
-            row = sheet.createRow(i + 1);
-            Map<String, Object> map = dataList.get(i);
-            for (int j = 0; j < columns.size(); j++) {
-                Object obj = map.get(columns.get(j).getName());
-                String v = "";
-                if (null != obj) {
-                    if (obj instanceof Double || obj instanceof Float) {
-                        DecimalFormat decimalFormat = new DecimalFormat("#,###.####");
-                        v = decimalFormat.format(obj);
-                    } else {
-                        v = obj.toString();
-                    }
-                }
-                XSSFCell cell = row.createCell(j);
-                cell.setCellValue(v);
-                cell.setCellStyle(cellStyle);
-            }
-        }
-
-        sheet.setDefaultRowHeight((short) (16.5 * 20));
-        for (int i = 0; i < columns.size(); i++) {
-            sheet.autoSizeColumn(i);
-        }
-    }
 }
