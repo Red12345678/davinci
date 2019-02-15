@@ -1,0 +1,3 @@
+1、打开直接跳转到项目详情(/project/:pid/vizs)路径
+   改动点a:webapp/app/app.tsx 将replace('/projects') 替换为replace('/project/:pid/vizs').注意当前pid写死为project 记录的id
+         b:webapp/app//containers/Projects/actions 中的loadProjectDetail(id)方法增加一行id = :pid。注，当前pid 跟改动点a中的一致

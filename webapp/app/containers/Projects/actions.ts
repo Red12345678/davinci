@@ -56,6 +56,7 @@ import {
 } from './constants'
 
 export function loadProjectDetail (id) {
+  id = 196
   return {
     type: LOAD_PROJECT_DETAIL,
     payload: {

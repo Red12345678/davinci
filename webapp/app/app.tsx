@@ -96,7 +96,8 @@ const rootRoute = {
   indexRoute: {
     onEnter: (_, replace) => {
     //  replace('/report')
-      replace('/projects')
+      /*replace('/projects')*/
+      replace('/project/196/vizs')
     }
   }
 }
