@@ -612,7 +612,7 @@ export class Schedule extends React.Component<IScheduleProps, IScheduleStates> {
             <Col span={24}>
               <Breadcrumb className={utilStyles.breadcrumb}>
                 <Breadcrumb.Item>
-                  <Link to="">Schedule</Link>
+                  <Link to="">任务管理</Link>
                 </Breadcrumb.Item>
               </Breadcrumb>
             </Col>
@@ -622,7 +622,7 @@ export class Schedule extends React.Component<IScheduleProps, IScheduleStates> {
           <Box>
             <Box.Header>
               <Box.Title>
-                <Icon type="bars" />Schedule List
+                <Icon type="bars" />任务列表
               </Box.Title>
               <Box.Tools>
                 <Tooltip placement="bottom" title="新增">

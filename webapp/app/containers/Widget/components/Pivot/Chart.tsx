@@ -644,6 +644,7 @@ export class Chart extends React.Component<IChartProps, IChartStates> {
             }
           } : null
 
+          // @ts-ignore
           instance.setOption({
             tooltip: {
               position: getTooltipPosition,

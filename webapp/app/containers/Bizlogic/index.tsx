@@ -232,7 +232,7 @@ export class Bizlogics extends React.PureComponent<IBizlogicsProps, IBizlogicsSt
             <Col span={24}>
               <Breadcrumb className={utilStyles.breadcrumb}>
                 <Breadcrumb.Item>
-                  <Link to="">View</Link>
+                  <Link to="">数据集管理</Link>
                 </Breadcrumb.Item>
               </Breadcrumb>
             </Col>
@@ -242,7 +242,7 @@ export class Bizlogics extends React.PureComponent<IBizlogicsProps, IBizlogicsSt
           <Box>
             <Box.Header>
               <Box.Title>
-                <Icon type="bars" />View List
+                <Icon type="bars" />数据集列表
               </Box.Title>
               <Box.Tools>
                 <Tooltip placement="bottom" title="新增">

@@ -126,7 +126,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
             <Col span={24}>
               <Breadcrumb className={utilStyles.breadcrumb}>
                 <Breadcrumb.Item>
-                  <Link to="">Viz</Link>
+                  <Link to="">展示管理</Link>
                 </Breadcrumb.Item>
               </Breadcrumb>
             </Col>
@@ -138,7 +138,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
               <Box.Title>
                 <Row onClick={this.onCollapseChange('dashboard')}>
                   <Col span={20}>
-                    <Icon type={`${this.state.collapse.dashboard ? 'down' : 'right'}`} />Dashboard
+                    <Icon type={`${this.state.collapse.dashboard ? 'down' : 'right'}`} />看板管理
                   </Col>
                 </Row>
               </Box.Title>
@@ -162,7 +162,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
               <Box.Title>
                 <Row onClick={this.onCollapseChange('display')}>
                   <Col span={20}>
-                    <Icon type={`${this.state.collapse.display ? 'down' : 'right'}`} />Display
+                    <Icon type={`${this.state.collapse.display ? 'down' : 'right'}`} />视图
                   </Col>
                 </Row>
               </Box.Title>
