@@ -1,8 +1,24 @@
+#  <<
+#  Davinci
+#  ==
+#  Copyright (C) 2016 - 2018 EDP
+#  ==
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#        http://www.apache.org/licenses/LICENSE-2.0
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#  >>
 
 file:
-  userfiles-path: classpath:userfiles/
-  web_resources: davinci-ui/
-  phantomJs-path: D:/java_dev/phantomjs-2.1.1-windows/bin/phantomjs.exe
+  userfiles-path: ${DAVINCI3_HOME}/userfiles/
+  web_resources: ${DAVINCI3_HOME}/davinci-ui/
+  phantomJs-path: ${DAVINCI3_HOME}/bin/phantom.js
+
 spring:
   servlet:
       multipart:
@@ -10,10 +26,10 @@ spring:
         max-file-size: 1024MB
         enabled: true
 
-#  config:
-#      location: classpath:/
-#      additional-location: file:classpath:/config/
-#      name: application
+  config:
+      location: classpath:/
+      additional-location: file:${DAVINCI3_HOME}/config/
+      name: application
 
   datasource:
       type: com.alibaba.druid.pool.DruidDataSource
@@ -37,7 +53,7 @@ spring:
   thymeleaf:
     mode: HTML5
     cache: true
-    prefix: classpath:templates/
+    prefix: classpath:/templates/
     encoding: UTF-8
     suffix: .html
     check-template-location: true
@@ -53,7 +69,7 @@ spring:
 
 
 logging:
-  config: classpath:logback.xml
+  config: file:${DAVINCI3_HOME}/config/logback.xml
 
 springfox:
   documentation:
@@ -84,9 +100,7 @@ mapper:
 
 sql_template_delimiter: $
 
-custom-datasource-driver-path: classpath:datasource_driver.yml
-#当前使用application.properties(固定加载)和application_dev.properties
-spring.profiles.active: dev
+custom-datasource-driver-path: ${DAVINCI3_HOME}/config/datasource_driver.yml
 
 
 

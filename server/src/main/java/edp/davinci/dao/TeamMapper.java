@@ -42,8 +42,13 @@ public interface TeamMapper {
 //    List<TeamBaseInfoWithParent> getTeamsByOrgId(@Param("orgId") Long orgId, @Param("userId") Long userId);
 
 
-    @Select({
+    /*@Select({
             "select distinct t.id, t.`name`, t.description, t.visibility, t.parent_team_id, t.full_team_id from team t left join rel_user_team rut on rut.team_id = t.id",
+            "where t.org_id = #{orgId}"
+    })*/
+
+    @Select({
+            "select distinct t.id, t.`name`, t.description, t.visibility, t.parent_team_id  from team t left join rel_user_team rut on rut.team_id = t.id",
             "where t.org_id = #{orgId}"
     })
     List<TeamBaseInfoWithParent> getTeamsByOrgId(@Param("orgId") Long orgId);

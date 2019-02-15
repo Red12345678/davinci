@@ -30,6 +30,7 @@ public class DavinciServerApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DavinciServerApplication.class, args);
+        System.out.println("-------启动成功-------------");
     }
 
 }
