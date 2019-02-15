@@ -126,7 +126,7 @@ export class Viz extends React.Component<IVizProps, IVizStates> {
             <Col span={24}>
               <Breadcrumb className={utilStyles.breadcrumb}>
                 <Breadcrumb.Item>
-                  <Link to="">展示管理</Link>
+                  {/*<Link to="">展示管理</Link>*/}
                 </Breadcrumb.Item>
               </Breadcrumb>
             </Col>
