@@ -520,7 +520,7 @@ export class Projects extends React.PureComponent<IProjectsProps, IProjectsState
                     {d.description}
                   </p>
                 </header>
-                {star}
+                {/*{star}*/}
                 <div className={styles.mimeActions}>
                   {transfer}
                   {editButton}
@@ -652,7 +652,7 @@ export class Projects extends React.PureComponent<IProjectsProps, IProjectsState
                   {d.description}
                 </p>
               </header>
-              {star}
+              {/*{star}*/}
               <div className={styles.joinActions}>
                 {currentCollectIds.indexOf(d.id) < 0 ? collectButton : unCollectButton}
                 {transfer}
@@ -733,9 +733,9 @@ export class Projects extends React.PureComponent<IProjectsProps, IProjectsState
                 {d.description}
               </p>
             </header>
-            {star}
+            {/*{star}*/}
             <div className={styles.collectActions}>
-              {collectButton}
+              {/*{collectButton}*/}
             </div>
           </div>
         </Col>
