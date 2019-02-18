@@ -622,7 +622,7 @@ export class Schedule extends React.Component<IScheduleProps, IScheduleStates> {
           <Box>
             <Box.Header>
               <Box.Title>
-                {/*<Icon type="bars" />任务列表*/}
+                <Icon type="bars" />任务列表
               </Box.Title>
               <Box.Tools>
                 <Tooltip placement="bottom" title="新增">
