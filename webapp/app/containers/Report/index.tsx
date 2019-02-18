@@ -127,7 +127,7 @@ export class Report extends React.Component<IReportProps, {}> {
 
     return (
       <div className={styles.report}>
-        {sidebarComponent}
+        {/*{sidebarComponent}*/}
         <div className={styles.container}>
           {this.props.children}
         </div>
