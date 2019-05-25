@@ -22,10 +22,7 @@ import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import edp.core.common.job.ScheduleService;
 import edp.core.exception.ServerException;
-import edp.core.utils.DateUtils;
-import edp.core.utils.FileUtils;
-import edp.core.utils.MailUtils;
-import edp.davinci.common.service.CommonService;
+import edp.core.utils.*;
 import edp.davinci.core.common.Constants;
 import edp.davinci.core.enums.CheckEntityEnum;
 import edp.davinci.core.enums.CronJobMediaType;
@@ -33,14 +30,24 @@ import edp.davinci.core.enums.FileTypeEnum;
 import edp.davinci.dao.*;
 import edp.davinci.dto.cronJobDto.CronJobConfig;
 import edp.davinci.dto.cronJobDto.CronJobContent;
-import edp.davinci.model.*;
-import edp.davinci.service.ViewService;
+import edp.davinci.dto.dashboardDto.DashboardWithPortal;
+import edp.davinci.dto.projectDto.ProjectDetail;
+import edp.davinci.dto.viewDto.ViewExecuteParam;
+import edp.davinci.dto.widgetDto.WidgetWithRelationDashboardId;
+import edp.davinci.model.CronJob;
+import edp.davinci.model.Display;
+import edp.davinci.model.User;
+import edp.davinci.model.Widget;
+import edp.davinci.service.ProjectService;
+import edp.davinci.service.ShareService;
 import edp.davinci.service.WidgetService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.script.ScriptEngine;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -51,10 +58,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("AlibabaThreadPoolCreation")
+import static edp.core.consts.Consts.SEMICOLON;
+import static edp.davinci.common.utils.ScriptUtiils.getExecuptParamScriptEngine;
+import static edp.davinci.common.utils.ScriptUtiils.getViewExecuteParam;
+
 @Slf4j
 @Service("emailScheduleService")
-public class EmailScheduleServiceImpl extends CommonService implements ScheduleService {
+public class EmailScheduleServiceImpl implements ScheduleService {
 
     @Autowired
     private CronJobMapper cronJobMapper;
@@ -72,9 +82,6 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
     private String fileBasePath;
 
     @Autowired
-    private ViewMapper viewMapper;
-
-    @Autowired
     private WidgetMapper widgetMapper;
 
     @Autowired
@@ -87,10 +94,16 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
     private DisplayMapper displayMapper;
 
     @Autowired
-    private ViewService viewService;
+    private ProjectService projectService;
 
     @Autowired
     private WidgetService widgetService;
+
+    @Autowired
+    private ShareService shareService;
+
+    @Autowired
+    private ServerUtils serverUtils;
 
 
     private volatile boolean imageExit = false;
@@ -102,7 +115,7 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
      */
     private final int imageMaxHeight = 1720;
 
-    private final String baseUrl = File.separator + "tempFiles" + File.separator + DateUtils.getNowDateYYYYMM();
+    private final String baseUrl = File.separator + "tempFiles" + File.separator;
 
     @Override
     public void execute(long jobId) throws Exception {
@@ -131,11 +144,11 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
 
                 String[] cc = null, bcc = null;
                 if (!StringUtils.isEmpty(cronJobConfig.getCc())) {
-                    cc = cronJobConfig.getCc().split(";");
+                    cc = cronJobConfig.getCc().split(SEMICOLON);
                 }
 
                 if (!StringUtils.isEmpty(cronJobConfig.getBcc())) {
-                    bcc = cronJobConfig.getBcc().split(";");
+                    bcc = cronJobConfig.getBcc().split(SEMICOLON);
                 }
 
                 mailUtils.sendTemplateAttachmentsEmail(
@@ -163,9 +176,9 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
         List<File> files = new ArrayList<>();
         for (CronJobContent cronJobContent : cronJobConfig.getContentList()) {
             String imageName = UUID.randomUUID() + ".png";
-            String imageUrl = baseUrl + File.separator + imageName;
+            String imageUrl = baseUrl + DateUtils.getNowDateYYYYMM() + File.separator + imageName;
             String imagePath = fileBasePath + imageUrl;
-            File file = new File(fileBasePath + baseUrl);
+            File file = new File(fileBasePath + baseUrl + DateUtils.getNowDateYYYYMM());
             if (!file.exists()) {
                 file.mkdirs();
             }
@@ -233,8 +246,8 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
      */
     private boolean checkFileExists(String filePath) {
         boolean result = false;
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
-        Future<Boolean> future = (Future<Boolean>) executorService.submit(() -> {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = executorService.submit(() -> {
             while (!imageExit && !new File(filePath).exists()) {
                 Thread.sleep(1000);
             }
@@ -252,6 +265,32 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
         return result;
     }
 
+    private String getContentUrl(Long userId, String contentType, Long contengId) {
+        String shareToken = shareService.generateShareToken(contengId, null, userId);
+        StringBuilder sb = new StringBuilder();
+
+        String type = "";
+        if ("widget".equalsIgnoreCase(contentType)) {
+            type = "widget";
+        } else if ("portal".equalsIgnoreCase(contentType) || "dashboard".equalsIgnoreCase(contentType)) {
+            type = "dashboard";
+        } else {
+            type = "";
+        }
+
+        sb.append(serverUtils.getHost())
+                .append("/share.html#/share/")
+                .append(contentType.equalsIgnoreCase("widget") || contentType.equalsIgnoreCase("portal") ? "dashboard" : contentType)
+                .append("?shareInfo=")
+                .append(shareToken);
+
+        if (!StringUtils.isEmpty(type)) {
+            sb.append("&type=" + type);
+        }
+
+        return sb.toString();
+    }
+
 
     /**
      * 根据job配置生成excel ，多个excel压缩至zip包
@@ -265,15 +304,27 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
         for (CronJobContent cronJobContent : cronJobConfig.getContentList()) {
             if (CheckEntityEnum.DASHBOARD.getSource().equalsIgnoreCase(cronJobContent.getContentType().trim())
                     || portal.equalsIgnoreCase(cronJobContent.getContentType().trim())) {
-                Dashboard dashboard = dashboardMapper.getById(cronJobContent.getId());
+                DashboardWithPortal dashboard = dashboardMapper.getDashboardWithPortalAndProject(cronJobContent.getId());
                 if (dashboard != null) {
-                    Set<Widget> widgets = widgetMapper.getByDashboard(dashboard.getId());
-                    if (widgets != null && widgets.size() > 0) {
-                        String filePath = fileBasePath + baseUrl + File.separator + dashboard.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
+                    ScriptEngine engine = getExecuptParamScriptEngine();
+                    Map<Long, ViewExecuteParam> executeParamMap = new HashMap<>();
+                    Set<WidgetWithRelationDashboardId> set = widgetMapper.getByDashboard(dashboard.getId());
+                    Set<Widget> widgets = new HashSet<>();
+                    if (!CollectionUtils.isEmpty(set)) {
+                        set.forEach(w -> {
+                            Widget widget = new Widget();
+                            BeanUtils.copyProperties(w, widget);
+                            widgets.add(widget);
+                            executeParamMap.put(w.getId(), getViewExecuteParam((engine), dashboard.getConfig(), widget.getConfig(), w.getRelationId()));
+                        });
+                    }
+                    if (!CollectionUtils.isEmpty(widgets)) {
+                        String filePath = fileBasePath + baseUrl + DateUtils.getNowDateYYYYMM() + File.separator + dashboard.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
 
                         filePath = filePath.replaceAll(File.separator + "{2,}", File.separator);
 
-                        File file = widgetService.writeExcel(widgets, null, filePath, user, false);
+                        ProjectDetail projectDetail = projectService.getProjectDetail(dashboard.getProject().getId(), user, false);
+                        File file = widgetService.writeExcel(widgets, projectDetail, executeParamMap, filePath, user, false);
                         files.add(file);
                     }
                 }
@@ -281,10 +332,11 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
                 Display display = displayMapper.getById(cronJobContent.getId());
                 if (display != null) {
                     Set<Widget> widgets = widgetMapper.getByDisplayId(display.getId());
-                    if (widgets != null && widgets.size() > 0) {
-                        String filePath = fileBasePath + baseUrl + File.separator + display.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
+                    if (!CollectionUtils.isEmpty(widgets)) {
+                        String filePath = fileBasePath + baseUrl + DateUtils.getNowDateYYYYMM() + File.separator + display.getName() + "-" + UUID.randomUUID() + FileTypeEnum.XLSX.getFormat();
                         filePath = filePath.replaceAll(File.separator + "{2,}", File.separator);
-                        File file = widgetService.writeExcel(widgets, null, filePath, user, false);
+                        ProjectDetail projectDetail = projectService.getProjectDetail(display.getProjectId(), user, false);
+                        File file = widgetService.writeExcel(widgets, projectDetail, null, filePath, user, false);
                         files.add(file);
                     }
                 }
@@ -293,7 +345,7 @@ public class EmailScheduleServiceImpl extends CommonService implements ScheduleS
 
         //多个文件压缩至zip包
         if (null != files && files.size() > 1) {
-            File zipFile = new File(fileBasePath + baseUrl + File.separator + UUID.randomUUID() + ".zip");
+            File zipFile = new File(fileBasePath + baseUrl + DateUtils.getNowDateYYYYMM() + File.separator + UUID.randomUUID() + ".zip");
             FileUtils.zipFile(files, zipFile);
             files.clear();
             files.add(zipFile);

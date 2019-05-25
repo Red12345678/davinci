@@ -21,7 +21,7 @@
 import { takeLatest, takeEvery } from 'redux-saga'
 import { call, fork, put } from 'redux-saga/effects'
 
-const message = require('antd/lib/message')
+import { message } from 'antd'
 import request from 'utils/request'
 import api from 'utils/api'
 import { ActionTypes } from './constants'
@@ -51,8 +51,17 @@ export function* getDisplay (action) {
 
 export function* getData (action) {
   const { payload } = action
-  const { renderType, layerId, dataToken, params: parameters } = payload
-  const { filters, linkageFilters, globalFilters, params, linkageParams, globalParams, ...rest } = parameters
+  const { renderType, layerId, dataToken, requestParams } = payload
+  const {
+    filters,
+    tempFilters,
+    linkageFilters,
+    globalFilters,
+    variables,
+    linkageVariables,
+    globalVariables,
+    ...rest
+  } = requestParams
 
   try {
     const response = yield call(request, {
@@ -60,8 +69,8 @@ export function* getData (action) {
       url: `${api.share}/data/${dataToken}`,
       data: {
         ...rest,
-        filters: filters.concat(linkageFilters).concat(globalFilters),
-        params: params.concat(linkageParams).concat(globalParams)
+        filters: filters.concat(tempFilters).concat(linkageFilters).concat(globalFilters),
+        params: variables.concat(linkageVariables).concat(globalVariables)
       }
     })
     const { resultList } = response.payload

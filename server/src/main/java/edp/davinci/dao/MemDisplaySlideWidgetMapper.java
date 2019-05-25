@@ -57,7 +57,9 @@ public interface MemDisplaySlideWidgetMapper {
             "`type` = #{type,jdbcType=SMALLINT},",
             "sub_type = #{subType,jdbcType=SMALLINT},",
             "`index` = #{index,jdbcType=INTEGER},",
-            "`params` = #{params,jdbcType=LONGVARCHAR}",
+            "`params` = #{params,jdbcType=LONGVARCHAR},",
+            "update_by = #{updateBy,jdbcType=BIGINT},",
+            "update_time = #{updateTime,jdbcType=TIMESTAMP}",
             "where id = #{id,jdbcType=BIGINT}"
     })
     int update(MemDisplaySlideWidget memDisplaySlideWidget);
@@ -82,7 +84,7 @@ public interface MemDisplaySlideWidgetMapper {
             "	s.id 'displaySlide.id',",
             "	s.display_id 'displaySlide.displayId',",
             "	s.`index` 'displaySlide.index',",
-            "	s.config 'displaySlide.config'",
+            "	s.`config` 'displaySlide.config'",
             "FROM mem_display_slide_widget m LEFT JOIN display_slide s on m.display_slide_id = s.id",
             "WHERE s.display_id = #{displayId}",
     })

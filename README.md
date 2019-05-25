@@ -2,12 +2,16 @@ Davinci
 ============
 
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![Total Lines](https://tokei.rs/b1/github/edp963/davinci?category=lines)](https://github.com/edp963/davinci)
+[![Build Status](https://travis-ci.org/edp963/davinci.svg?branch=master)](https://travis-ci.org/edp963/davinci)
+[![GitHub release](https://img.shields.io/github/release/edp963/davinci.svg)](https://github.com/edp963/davinci/releases)
+[![Stargazers over time](https://starcharts.herokuapp.com/edp963/davinci.svg)](https://starcharts.herokuapp.com/edp963/davinci)
 
 > 来自[宜信](https://www.creditease.cn/)[技术研发中心](http://crdc.creditease.cn/)的可视应用平台
 
 **Davinci是一个DVAAS（Data Visualization as a Service）平台解决方案。**
 
-Davinci面向业务人员/数据工程师/数据分析师/数据科学家，致力于提供一站式数据可视化解决方案。既可作为公有云/私有云独立使用，也可作为可视化插件集成到三方系统。用户只需在可视化UI上简单配置即可服务多种数据可视化应用，并支持高级交互/行业分析/模式探索/社交智能等可视化功能。
+Davinci面向业务人员/数据工程师/数据分析师/数据科学家，致力于提供一站式数据可视化解决方案。既可作为公有云/私有云独立使用，也可作为可视化插件集成到三方系统。用户只需在可视化UI上简单配置即可满足多种数据可视化需求，并支持高级交互/行业分析/模式探索/社交智能等可视化功能。
 
 ## 设计理念
 
