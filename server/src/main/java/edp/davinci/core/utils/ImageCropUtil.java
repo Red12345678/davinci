@@ -32,6 +32,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static edp.core.consts.Consts.EMPTY;
+
+
 /**
  * 裁剪图片工具
  */
@@ -51,7 +54,7 @@ public class ImageCropUtil {
     public static List<String> cutImage(String basePath, String scrImagePath, int cutHeight) throws Exception {
 
         if (StringUtils.isEmpty(scrImagePath)) {
-            throw new Exception("source image path is empty");
+            throw new Exception("source image path is EMPTY");
         }
 
         List<String> files = new ArrayList<>();
@@ -76,7 +79,7 @@ public class ImageCropUtil {
         if (height > cutHeight) {
             int count = (int) Math.ceil((double) height / cutHeight);
             log.info("count crop image num: {}", count);
-            ExecutorService executorService = Executors.newCachedThreadPool();
+            ExecutorService executorService = Executors.newFixedThreadPool(8);
             CountDownLatch countDownLatch = new CountDownLatch(count);
 
             for (int i = 0; i < count; i++) {
@@ -89,7 +92,7 @@ public class ImageCropUtil {
                 File cropFile = new File(cropPath);
                 cropFile.createNewFile();
 
-                files.add(cropPath.replace(basePath, ""));
+                files.add(cropPath.replace(basePath, EMPTY));
 
                 final int n = i + 1;
                 executorService.execute(() -> {

@@ -46,12 +46,13 @@ function displayReducer (state = initialState, { type, payload }) {
           obj[layer.id] = (layer.type === GraphTypes.Chart) ? {
             datasource: { resultList: [] },
             loading: false,
-            queryParams: {
+            queryConditions: {
+              tempFilters: [],
               linkageFilters: [],
               globalFilters: [],
-              params: [],
-              linkageParams: [],
-              globalParams: []
+              variables: [],
+              linkageVariables: [],
+              globalVariables: []
             },
             interactId: '',
             renderType: 'rerender'

@@ -30,8 +30,10 @@
                 description,
             </if>
             `type`,
-            project_id,
-            config
+            `project_id`,
+            `config`,
+            `create_by`,
+            `create_time`
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             #{name,jdbcType=VARCHAR},
@@ -40,13 +42,15 @@
             </if>
             #{type,jdbcType=VARCHAR},
             #{projectId,jdbcType=BIGINT},
-            #{config,jdbcType=LONGVARCHAR}
+            #{config,jdbcType=LONGVARCHAR},
+            #{createBy,jdbcType=BIGINT},
+            #{createTime,jdbcType=TIMESTAMP}
         </trim>
     </insert>
 
     <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
         insert ignore into source
-        (`id`,`name`,description, `project_id`, `type`, config)
+        (`id`,`name`,description, `project_id`, `type`, `config`)
         VALUES
         <foreach collection="list" item="record" index="index" separator=",">
             (

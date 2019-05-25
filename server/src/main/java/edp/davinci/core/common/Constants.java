@@ -75,11 +75,6 @@ public class Constants extends Consts {
     public static final String SOURCE_CSV_PATH = "/source/csv/";
 
     /**
-     * 团队头像上传地址
-     */
-    public static final String TEAM_AVATAR_PATH = "/image/organization/";
-
-    /**
      * 邀请组织成员邮件主题
      * inviter username
      * organization
@@ -109,6 +104,12 @@ public class Constants extends Consts {
 
 
     /**
+     * 格式化全局参数js
+     */
+    public static final String EXECUTE_PARAM_FORMAT_JS = "templates/js/executeParam.js";
+
+
+    /**
      * 定时任务发送邮件模板
      */
     public static final String SCHEDULE_MAIL_TEMPLATE = "mail/scheduleEmaiTemplate";
@@ -129,4 +130,24 @@ public class Constants extends Consts {
     public static final String EXCEL_FORMAT_KEY = "format";
 
     public static final String EXCEL_FORMAT_TYPE_KEY = "formatType";
+
+    public static final String REG_SQL_PLACEHOLDER = "[a-zA-Z0-9_.-[\\u4e00-\\u9fa5]*]+\\s*\\w*[<>!=]*\\s*%s\\w+%s";
+
+    public static final String REG_AUTHVAR = "\\([a-zA-Z0-9_.-[\\u4e00-\\u9fa5]*]+\\s*\\w*[<>!=]*\\s*\\(?%s\\w+%s\\)?\\s*\\)";
+
+
+    public static final String LDAP_USER_PASSWORD = "LDAP";
+
+
+    public static char getSqlTempDelimiter(String sqlTempDelimiter) {
+        return sqlTempDelimiter.charAt(sqlTempDelimiter.length() - 1);
+    }
+
+    public static String getReg(String express, char delimiter) {
+        String arg = String.valueOf(delimiter);
+        if (delimiter == DOLLAR_DELIMITER) {
+            arg = "\\" + arg;
+        }
+        return String.format(express, arg, arg);
+    }
 }

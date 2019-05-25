@@ -21,6 +21,7 @@ package edp.davinci.core.utils;
 import com.alibaba.druid.util.StringUtils;
 import edp.core.exception.ServerException;
 import edp.core.model.QueryColumn;
+import edp.core.utils.CollectionUtils;
 import edp.core.utils.SqlUtils;
 import edp.davinci.core.enums.FileTypeEnum;
 import edp.davinci.core.enums.SqlColumnEnum;
@@ -33,6 +34,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.*;
+
+import static edp.core.consts.Consts.EMPTY;
+
 
 public class CsvUtils {
 
@@ -71,10 +75,10 @@ public class CsvUtils {
             List<Map<String, Object>> values = null;
             Set<QueryColumn> headers = null;
 
-            if (null != records && records.size() > 0) {
+            if (!CollectionUtils.isEmpty(records)) {
                 headers = new HashSet<>();
                 for (String key : csvHeaders) {
-                    headers.add(new QueryColumn(key, SqlUtils.formatSqlType(records.get(0).get(key))));
+                    headers.add(new QueryColumn(key.replace("\uFEFF", EMPTY), SqlUtils.formatSqlType(records.get(0).get(key))));
                 }
                 if (records.size() > 1) {
                     values = new ArrayList<>();
@@ -131,7 +135,7 @@ public class CsvUtils {
     public static String formatCsvWithFirstAsHeader(String filePath, String fileName, List<QueryColumn> columns, List<Map<String, Object>> dataList) throws ServerException {
 
         String csvFullName = null;
-        if (null != columns && columns.size() > 0) {
+        if (!CollectionUtils.isEmpty(columns)) {
 
             List<String> headers = new ArrayList<>();
             List<String> headerTypes = new ArrayList<>();
@@ -175,7 +179,7 @@ public class CsvUtils {
                 csvPrinter.printRecord(headers);
                 csvPrinter.printRecord(headerTypes);
 
-                if (null != dataList && dataList.size() > 0) {
+                if (!CollectionUtils.isEmpty(dataList)) {
                     for (Map<String, Object> map : dataList) {
                         List<Object> list = new ArrayList<>();
                         for (String key : headers) {
