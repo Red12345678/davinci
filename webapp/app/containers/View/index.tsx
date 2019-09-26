@@ -29,7 +29,7 @@ import { Link, RouteComponentProps } from 'react-router'
 
 import injectReducer from 'utils/injectReducer'
 import injectSaga from 'utils/injectSaga'
-import reducer, { ViewStateType } from './reducer'
+import reducer from './reducer'
 import sagas from './sagas'
 
 import { ViewActions, ViewActionType } from './actions'
@@ -103,7 +103,7 @@ export class ViewList extends React.PureComponent<IViewListProps, IViewListState
   private getFilterViews = memoizeOne((viewName: string, views: IViewBase[]) => {
     if (!Array.isArray(views) || !views.length) { return [] }
     const regex = new RegExp(viewName, 'gi')
-    const filterViews = views.filter((v) => v.name.match(regex))
+    const filterViews = views.filter((v) => v.name.match(regex) || v.description.match(regex))
     return filterViews
   })
 
@@ -202,6 +202,7 @@ export class ViewList extends React.PureComponent<IViewListProps, IViewListState
       filterViewName: value,
       filterDropdownVisible: false
     })
+    window.event.preventDefault()
   }
 
   private basePagination: PaginationConfig = {
@@ -255,7 +256,8 @@ export class ViewList extends React.PureComponent<IViewListProps, IViewListState
           <Box>
             <Box.Header>
               <Box.Title>
-                <Icon type="bars">View List</Icon>
+                <Icon type="bars" />
+                View List
               </Box.Title>
               <Box.Tools>
                 <Tooltip placement="bottom" title="新增">

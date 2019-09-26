@@ -19,8 +19,9 @@
  */
 
 import { SqlTypes } from 'app/globalConstants'
-import { ISourceSimple, ISourceTable, IMapTableColumns, ISourceRaw } from 'containers/Source/types'
+import { ISourceSimple, ISourceBase, ISchema } from 'containers/Source/types'
 import { ViewModelTypes, ViewModelVisualTypes, ViewVariableTypes, ViewVariableValueTypes } from './constants'
+import { CancelTokenSource } from 'axios'
 
 export interface IViewBase {
   id: number
@@ -166,9 +167,8 @@ export interface IViewState {
   formedViews: IFormedViews
   editingView: IView
   editingViewInfo: IViewInfo
-  sources: ISourceRaw[]
-  tables: ISourceTable[]
-  mapTableColumns: IMapTableColumns
+  sources: ISourceBase[]
+  schema: ISchema
   sqlValidation: ISqlValidation
   sqlDataSource: IExecuteSqlResponse
   sqlLimit: number
@@ -177,4 +177,6 @@ export interface IViewState {
   channels: IDacChannel[]
   tenants: IDacTenant[]
   bizs: IDacBiz[]
+
+  cancelTokenSources: CancelTokenSource[]
 }

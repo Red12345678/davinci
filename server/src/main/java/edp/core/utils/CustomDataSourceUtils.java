@@ -1,67 +1,54 @@
 /*
  * <<
- * Davinci
- * ==
- * Copyright (C) 2016 - 2018 EDP
- * ==
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *       http://www.apache.org/licenses/LICENSE-2.0
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- * >>
+ *  Davinci
+ *  ==
+ *  Copyright (C) 2016 - 2019 EDP
+ *  ==
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *  >>
+ *
  */
 
 package edp.core.utils;
 
 import com.alibaba.druid.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edp.core.consts.Consts;
 import edp.core.model.CustomDataSource;
+import lombok.Getter;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
-import static edp.core.consts.Consts.*;
+import static edp.core.consts.Consts.JDBC_DATASOURCE_DEFAULT_VERSION;
 
 
 public class CustomDataSourceUtils {
 
-    private static volatile Map<String, CustomDataSource> map = new HashMap<>();
+    private static volatile Map<String, CustomDataSource> customDataSourceMap = new HashMap<>();
 
-    public static CustomDataSource getInstance(String url) {
-        String dataSourceName = getDataSourceName(url);
-        if (map.containsKey(dataSourceName) && null != map.get(dataSourceName)) {
-            CustomDataSource customDataSource = map.get(dataSourceName);
+    @Getter
+    private static volatile Map<String, List<String>> dataSourceVersoin = new HashMap<String, List<String>>();
+
+    public static CustomDataSource getInstance(String jdbcUrl, String version) {
+        String dataSourceName = SourceUtils.getDataSourceName(jdbcUrl);
+        String key = getKey(dataSourceName, version);
+        if (customDataSourceMap.containsKey(key) && null != customDataSourceMap.get(key)) {
+            CustomDataSource customDataSource = customDataSourceMap.get(key);
             if (null != customDataSource) {
                 return customDataSource;
             }
-        }
-        return null;
-    }
-
-    public static CustomDataSource getCustomDataSource(String url) throws Exception {
-        CustomDataSource customDataSource = getInstance(url);
-        if (null != customDataSource) {
-            try {
-                Class<?> aClass = Class.forName(customDataSource.getDriver());
-                if (null == aClass) {
-                    throw new Exception("Unable to get driver instance for jdbcUrl: " + url);
-                }
-            } catch (ClassNotFoundException e) {
-                throw new Exception("Unable to get driver instance: " + url);
-            }
-            return customDataSource;
         }
         return null;
     }
@@ -82,18 +69,8 @@ public class CustomDataSourceUtils {
             return;
         }
 
-        FileReader fileReader = null;
-        try {
-            fileReader = new FileReader(yamlFile);
-        } catch (FileNotFoundException e) {
-            return;
-        }
-        if (null == fileReader) {
-            return;
-        }
-
         Yaml yaml = new Yaml();
-        HashMap<String, Object> loads = yaml.loadAs(new BufferedReader(fileReader), HashMap.class);
+        HashMap<String, Object> loads = yaml.loadAs(new BufferedReader(new FileReader(yamlFile)), HashMap.class);
         if (!CollectionUtils.isEmpty(loads)) {
             ObjectMapper mapper = new ObjectMapper();
             for (String key : loads.keySet()) {
@@ -127,20 +104,29 @@ public class CustomDataSourceUtils {
                     }
                 }
 
-                map.put(key.toLowerCase(), customDataSource);
+                List<String> versoins = null;
+                if (dataSourceVersoin.containsKey(customDataSource.getName())) {
+                    versoins = dataSourceVersoin.get(customDataSource.getName());
+                } else {
+                    versoins = new ArrayList<>();
+                }
+                if (StringUtils.isEmpty(customDataSource.getVersion())) {
+                    versoins.add(0, JDBC_DATASOURCE_DEFAULT_VERSION);
+                } else {
+                    versoins.add(customDataSource.getVersion());
+                }
+
+                if (versoins.size() == 1 && versoins.get(0).equals(JDBC_DATASOURCE_DEFAULT_VERSION)) {
+                    versoins.remove(0);
+                }
+
+                dataSourceVersoin.put(customDataSource.getName(), versoins);
+                customDataSourceMap.put(getKey(customDataSource.getName(), customDataSource.getVersion()), customDataSource);
             }
         }
     }
 
-    private static String getDataSourceName(String jdbcUrl) {
-        String dataSourceName = null;
-        jdbcUrl = jdbcUrl.replaceAll(NEW_LINE_CHAR, EMPTY).replaceAll(SPACE, EMPTY).trim().toLowerCase();
-        String reg = "jdbc:\\w+";
-        Pattern pattern = Pattern.compile(reg);
-        Matcher matcher = pattern.matcher(jdbcUrl);
-        if (matcher.find()) {
-            dataSourceName = matcher.group().split(COLON)[1];
-        }
-        return dataSourceName;
+    private static String getKey(String database, String version) {
+        return database + Consts.COLON + (StringUtils.isEmpty(version) ? Consts.EMPTY : version);
     }
 }
