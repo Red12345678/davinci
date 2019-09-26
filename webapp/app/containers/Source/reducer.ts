@@ -19,7 +19,7 @@
  */
 
 import { Record } from 'immutable'
-import { ISourceState, ISource } from './types'
+import { ISourceState } from './types'
 
 import { ActionTypes } from './constants'
 import { SourceActionType } from './actions'
@@ -28,7 +28,8 @@ const SourceRecord = Record<ISourceState>({
   sources: null,
   listLoading: false,
   formLoading: false,
-  testLoading: false
+  testLoading: false,
+  datasourcesInfo: []
 })
 const initialState = new SourceRecord()
 
@@ -41,14 +42,14 @@ function sourceReducer (state = initialState, action: SourceActionType) {
     case ActionTypes.LOAD_SOURCES_SUCCESS:
       return state
         .set('listLoading', false)
-        .set('sources', action.payload.sources.map<ISource>((source) => ({ ...source, config: JSON.parse(source.config) })))
+        .set('sources', action.payload.sources)
     case ActionTypes.LOAD_SOURCES_FAILURE:
       return state.set('listLoading', false)
     case ActionTypes.ADD_SOURCE:
       return state.set('formLoading', true)
     case ActionTypes.ADD_SOURCE_SUCCESS:
       const updatedSources = (sources || [])
-      updatedSources.unshift({ ...action.payload.result, config: JSON.parse(action.payload.result.config) })
+      updatedSources.unshift(action.payload.result)
       return state
         .set('formLoading', false)
         .set('sources', updatedSources.slice())
@@ -76,6 +77,8 @@ function sourceReducer (state = initialState, action: SourceActionType) {
     case ActionTypes.TEST_SOURCE_CONNECTION_SUCCESS:
     case ActionTypes.TEST_SOURCE_CONNECTION_FAILURE:
       return state.set('testLoading', false)
+    case ActionTypes.LOAD_DATASOURCES_INFO_SUCCESS:
+      return state.set('datasourcesInfo', action.payload.info)
     default:
       return state
   }

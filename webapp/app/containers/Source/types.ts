@@ -27,7 +27,7 @@ export interface ISourceSimple {
   name: string
 }
 
-interface ISourceBase extends ISourceSimple {
+export interface ISourceBase extends ISourceSimple {
   type: SourceType
   description: string
   projectId: number
@@ -43,24 +43,68 @@ export interface ISource extends ISourceBase {
     password: string
     url: string
     parameters: string
+    ext?: boolean
+    version?: string
   }
 }
 
-export type ISourceTable = string
+export interface ISourceFormValues extends ISourceBase {
+  datasourceInfo: string[]
+  config: {
+    username: string
+    password: string
+    url: string
+    parameters: string
+  }
+}
 
-export interface ISourceColumn {
+export type IDatabase = string
+
+export interface ITable {
+  name: string,
+  type: 'TABLE' | 'VIEW'
+}
+
+export interface IColumn {
   name: string
   type: SqlTypes
 }
 
-export interface ISourceTableColumns {
-  columns: ISourceColumn[]
+export interface ISourceDatabases {
+  databases: IDatabase[]
+  sourceId: number
+}
+
+export interface IMapSourceDatabases {
+  [sourceId: number]: IDatabase[]
+}
+
+export interface IDatabaseTables {
+  tables: ITable[]
+  dbName: IDatabase
+  sourceId: number
+}
+
+export interface IMapDatabaseTables {
+  [mapKey: string]: IDatabaseTables
+}
+
+export interface ITableColumns {
+  columns: IColumn[]
   primaryKeys: string[]
-  tableName: ISourceTable
+  tableName: string
+  sourceId: number
+  dbName: string
 }
 
 export interface IMapTableColumns {
-  [tableName: string]: ISourceTableColumns
+  [mapKey: string]: ITableColumns
+}
+
+export interface ISchema {
+  mapDatabases: IMapSourceDatabases
+  mapTables: IMapDatabaseTables
+  mapColumns: IMapTableColumns
 }
 
 export interface ICSVMetaInfo {
@@ -72,9 +116,15 @@ export interface ICSVMetaInfo {
 }
 
 export interface ISourceState {
-  sources: ISource[]
+  sources: ISourceBase[]
   listLoading: boolean
   formLoading: boolean
   testLoading: boolean
+  datasourcesInfo: IDatasourceInfo[]
 }
 
+export interface IDatasourceInfo {
+  name: string
+  prefix: string
+  versions: string[]
+}
